@@ -158,3 +158,16 @@ nav a:hover{color:#fff;transform:translateY(-2px)}
   nav a{font-size:14px}
   .service p{font-size:14px}
 }
+
+
+/* Selección múltiple de servicios */
+.selected-services{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.selected-services>p{margin:0;color:#626870;font-size:11px}
+.selected-service{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;padding:10px 12px;background:#0b0d10;border:1px solid #252a30;border-radius:4px}
+.selected-service span{font-size:11px;color:#fff;font-weight:700}
+.selected-service strong{font-size:11px;color:#ff646a}
+.remove-service{width:25px;height:25px;border:1px solid #30353b;background:transparent;color:#8b9098;border-radius:3px;font-size:18px;line-height:1;transition:color .3s ease,border-color .3s ease,background-color .3s ease,transform .3s ease}
+.remove-service:hover{color:#fff;border-color:#e3262e;background:#e3262e;transform:scale(1.05)}
+.chosen-total{display:flex;align-items:center;justify-content:space-between;margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
+.chosen-total strong{font-size:10px;text-transform:uppercase;color:#777d85;letter-spacing:1px}
+.chosen-total b{font-size:14px;color:var(--red2)}
