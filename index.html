@@ -69,7 +69,7 @@
 <section id="turno" class="booking dark">
   <div class="booking-copy reveal"><p class="eyebrow">RESERVÁ TU TURNO</p><h2>Que tu auto vuelva a<br><span>verse como querés.</span></h2><p>Completá tus datos. Al confirmar, se abrirá WhatsApp con toda la información de tu solicitud para coordinar el turno.</p></div>
   <form id="bookingForm" class="booking-form reveal">
-    <div class="chosen"><span>SERVICIO</span><strong id="chosenService">Elegí un servicio arriba</strong><b id="chosenPrice"></b></div>
+    <div class="chosen"><span>SERVICIOS SELECCIONADOS</span><div id="selectedServices" class="selected-services"><p>Elegí uno o más servicios arriba</p></div><div class="chosen-total"><strong>Total estimado</strong><b id="chosenPrice"></b></div></div>
     <div class="fields"><label>Nombre<input id="name" required placeholder="Tu nombre"></label><label>WhatsApp<input id="phone" required type="tel" placeholder="11 1234 5678"></label><label>Fecha<input id="date" required type="date"></label><label>Horario<select id="time" required><option value="">Seleccionar</option><option>09:00</option><option>11:00</option><option>13:00</option><option>15:00</option><option>17:00</option></select></label><label class="full">Vehículo<input id="vehicle" required placeholder="Ej. Volkswagen Golf 2018"></label><label class="full">Patente <small>(opcional)</small><input id="plate" placeholder="AA 123 BB"></label><label class="full">Mensaje <small>(opcional)</small><textarea id="notes" rows="3" placeholder="¿Hay algo que debamos saber?"></textarea></label></div>
     <button class="btn red full-btn" type="submit">Solicitar turno por WhatsApp →</button>
     <p class="form-note">La solicitud no confirma automáticamente el turno. Se coordina por WhatsApp.</p>
