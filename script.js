@@ -38,20 +38,71 @@ document.querySelectorAll(".select-service").forEach(btn=>btn.addEventListener("
   showToast("Servicio agregado: "+service.name);
 }));
 
-$("#bookingForm").addEventListener("submit",e=>{
+const TURNOS_URL="https://script.google.com/macros/s/AKfycbz7auQThTcaUxm_xfo2Xpb9Yrr5csNHRGJLFtCGX8p68mQAwqZi0y5spZfEeqLDfrQ8/exec";
+
+$("#bookingForm").addEventListener("submit",async e=>{
   e.preventDefault();
   if(!selectedServices.length){
     showToast("Primero elegí al menos un servicio");
     return;
   }
+
+  const form=e.currentTarget;
+  const submitButton=form.querySelector("button[type=submit]");
+  const originalText=submitButton.textContent;
   const date=$("#date").value;
+  const time=$("#time").value;
+  const name=$("#name").value.trim();
+  const phone=$("#phone").value.trim();
+  const vehicle=$("#vehicle").value.trim();
+  const plate=$("#plate").value.trim();
+  const notes=$("#notes").value.trim();
   const dateText=new Date(date+"T12:00:00").toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
   const total=selectedServices.reduce((sum,service)=>sum+service.price,0);
   const servicesText=selectedServices.map(service=>"• "+service.name+" — "+money(service.price)).join("%0A");
-  let message="Hola BRUTAL DETAIL, quiero solicitar un turno.%0A%0A*Servicios:*%0A"+servicesText+"%0A*Total estimado:* "+encodeURIComponent(money(total))+"%0A*Nombre:* "+encodeURIComponent($("#name").value.trim())+"%0A*WhatsApp:* "+encodeURIComponent($("#phone").value.trim())+"%0A*Fecha:* "+encodeURIComponent(dateText)+"%0A*Horario:* "+encodeURIComponent($("#time").value)+"%0A*Vehículo:* "+encodeURIComponent($("#vehicle").value.trim());
-  if($("#plate").value.trim())message+="%0A*Patente:* "+encodeURIComponent($("#plate").value.trim());
-  if($("#notes").value.trim())message+="%0A*Mensaje:* "+encodeURIComponent($("#notes").value.trim());
-  window.open("https://wa.me/"+WHATSAPP+"?text="+message,"_blank")
+
+  submitButton.disabled=true;
+  submitButton.textContent="Verificando horario...";
+
+  try{
+    // text/plain evita un preflight CORS innecesario en Apps Script.
+    const response=await fetch(TURNOS_URL,{
+      method:"POST",
+      redirect:"follow",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({
+        fecha:date,
+        hora:time,
+        nombre:name,
+        telefono:phone,
+        servicios:selectedServices.map(service=>service.name).join(", ")
+      })
+    });
+
+    const result=JSON.parse(await response.text());
+
+    if(!result.success){
+      showToast(result.message||"Ese horario ya no está disponible");
+      alert("❌ "+(result.message||"Ese horario ya no está disponible."));
+      return;
+    }
+
+    let message="Hola BRUTAL DETAIL, quiero solicitar un turno.%0A%0A*Servicios:*%0A"+servicesText+"%0A*Total estimado:* "+encodeURIComponent(money(total))+"%0A*Nombre:* "+encodeURIComponent(name)+"%0A*WhatsApp:* "+encodeURIComponent(phone)+"%0A*Fecha:* "+encodeURIComponent(dateText)+"%0A*Horario:* "+encodeURIComponent(time)+"%0A*Vehículo:* "+encodeURIComponent(vehicle);
+    if(plate)message+="%0A*Patente:* "+encodeURIComponent(plate);
+    if(notes)message+="%0A*Mensaje:* "+encodeURIComponent(notes);
+
+    showToast("¡Turno reservado!");
+    window.open("https://wa.me/"+WHATSAPP+"?text="+message,"_blank");
+    form.reset();
+    selectedServices=[];
+    renderSelectedServices();
+  }catch(error){
+    console.error(error);
+    alert("❌ No pudimos confirmar el turno. No se abrió WhatsApp para evitar una reserva sin confirmar.");
+  }finally{
+    submitButton.disabled=false;
+    submitButton.textContent=originalText;
+  }
 });
 
 const today=new Date();
