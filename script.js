@@ -39,6 +39,58 @@ document.querySelectorAll(".select-service").forEach(btn=>btn.addEventListener("
 }));
 
 const TURNOS_URL="https://script.google.com/macros/s/AKfycbz7auQThTcaUxm_xfo2Xpb9Yrr5csNHRGJLFtCGX8p68mQAwqZi0y5spZfEeqLDfrQ8/exec";
+const TIME_OPTIONS=["09:00","11:00","13:00","15:00","17:00"];
+
+function cargarHorariosDisponibles(fecha){
+  const select=$("#time");
+  select.innerHTML='<option value="">Cargando horarios...</option>';
+  select.disabled=true;
+
+  const callbackName="horarios_"+Date.now();
+  window[callbackName]=data=>{
+    try{
+      const ocupados=Array.isArray(data.ocupados)?data.ocupados:[];
+      select.innerHTML='<option value="">Seleccionar</option>';
+
+      TIME_OPTIONS.forEach(hora=>{
+        const option=document.createElement("option");
+        option.value=hora;
+        option.textContent=ocupados.includes(hora)?hora+" — NO DISPONIBLE":hora;
+        option.disabled=ocupados.includes(hora);
+        select.appendChild(option);
+      });
+
+      if(ocupados.length>=TIME_OPTIONS.length){
+        const option=document.createElement("option");
+        option.value="";
+        option.textContent="Todos los horarios están ocupados";
+        option.disabled=true;
+        select.insertBefore(option,select.children[1]);
+      }
+
+      select.disabled=false;
+    }finally{
+      delete window[callbackName];
+      script.remove();
+    }
+  };
+
+  const script=document.createElement("script");
+  script.src=TURNOS_URL+"?fecha="+encodeURIComponent(fecha)+"&callback="+callbackName;
+  script.onerror=()=>{
+    delete window[callbackName];
+    script.remove();
+    select.innerHTML='<option value="">No se pudieron cargar los horarios</option>';
+    select.disabled=false;
+    alert("No pudimos consultar los horarios disponibles. Actualizá la página e intentá nuevamente.");
+  };
+  document.body.appendChild(script);
+}
+
+$("#date").addEventListener("change",()=>{
+  const fecha=$("#date").value;
+  if(fecha)cargarHorariosDisponibles(fecha);
+});
 
 $("#bookingForm").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -65,7 +117,6 @@ $("#bookingForm").addEventListener("submit",async e=>{
   submitButton.textContent="Verificando horario...";
 
   try{
-    // text/plain evita un preflight CORS innecesario en Apps Script.
     const response=await fetch(TURNOS_URL,{
       method:"POST",
       redirect:"follow",
@@ -84,6 +135,7 @@ $("#bookingForm").addEventListener("submit",async e=>{
     if(!result.success){
       showToast(result.message||"Ese horario ya no está disponible");
       alert("❌ "+(result.message||"Ese horario ya no está disponible."));
+      cargarHorariosDisponibles(date);
       return;
     }
 
@@ -96,6 +148,8 @@ $("#bookingForm").addEventListener("submit",async e=>{
     form.reset();
     selectedServices=[];
     renderSelectedServices();
+    $("#time").innerHTML='<option value="">Seleccionar fecha primero</option>';
+    $("#time").disabled=true;
   }catch(error){
     console.error(error);
     alert("❌ No pudimos confirmar el turno. No se abrió WhatsApp para evitar una reserva sin confirmar.");
@@ -108,12 +162,14 @@ $("#bookingForm").addEventListener("submit",async e=>{
 const today=new Date();
 today.setMinutes(today.getMinutes()-today.getTimezoneOffset());
 $("#date").min=today.toISOString().split("T")[0];
+$("#time").disabled=true;
+$("#time").innerHTML='<option value="">Seleccionar fecha primero</option>';
 
 function showToast(t){
   const el=$("#toast");
   el.textContent=t;
   el.classList.add("show");
-  setTimeout(()=>el.classList.remove("show"),1800)
+  setTimeout(()=>el.classList.remove("show"),1800);
 }
 
 $("#menu").addEventListener("click",()=>$("#nav").classList.toggle("open"));
@@ -122,7 +178,7 @@ document.querySelectorAll("#nav a").forEach(a=>a.addEventListener("click",()=>$(
 const observer=new IntersectionObserver(es=>es.forEach(e=>{
   if(e.isIntersecting){
     e.target.classList.add("visible");
-    observer.unobserve(e.target)
+    observer.unobserve(e.target);
   }
 }),{threshold:.12});
 document.querySelectorAll(".reveal").forEach(e=>observer.observe(e));
